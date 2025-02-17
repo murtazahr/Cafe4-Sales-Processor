@@ -220,7 +220,7 @@ def process_file():
         # Process file
         df = pd.read_excel(io.BytesIO(file_content), header=5, engine='openpyxl')
 
-        # Process the dataframe (your existing logic)
+        # Process the dataframe
         output_df = process_sales_data(df)
 
         # Convert to CSV in memory
@@ -245,5 +245,5 @@ def process_file():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
