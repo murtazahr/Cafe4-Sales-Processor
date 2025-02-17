@@ -1,21 +1,32 @@
-import os
-import tkinter as tk
-from datetime import datetime
-from tkinter import filedialog
+import io
 
+from flask import Flask, request, send_file, render_template, jsonify
 import pandas as pd
+import os
+import logging
+from datetime import datetime
+from werkzeug.utils import secure_filename
+import traceback
+
+app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(
+    filename='sales_processor.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Configure upload folder
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 ACCOUNT_NAME = '70d82aaf-788e-4c20-8b41-708e719b2daf'
 
-
-# Function to normalize table names (handle NBSP and regular spaces)
-def normalize_table_name(table_name):
-    if not isinstance(table_name, str):
-        return str(table_name)
-    # Replace NBSP (Unicode U+00A0) with regular space
-    return table_name.replace('\u00A0', ' ').strip()
-
-
+# Your existing customer mapping and functions here
 customer_mapping = {
     'Walk-ins': '4947c933-8e0e-4158-8cf0-336ccfa1a540',
     'Matsya Guest - Room 1': '1fee8999-29b4-4784-a35e-5215d2cecc94',
@@ -33,78 +44,15 @@ customer_mapping = {
     'Abdul Haseeb': 'fc23947d-05d6-418e-ba5c-06cf1ed785c8'
 }
 
-# Normalize all keys in customer_mapping
+
+# Your existing normalize_table_name function
+def normalize_table_name(table_name):
+    if not isinstance(table_name, str):
+        return str(table_name)
+    return table_name.replace('\u00A0', ' ').strip()
+
+
 normalized_customer_mapping = {normalize_table_name(k): v for k, v in customer_mapping.items()}
-
-
-def select_input_file():
-    """Open file dialog for user to select input file"""
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-    file_path = filedialog.askopenfilename(
-        title="Select Sales Order Report Excel File",
-        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
-    )
-    return file_path
-
-
-def validate_excel_file(filepath):
-    """Validate if the Excel file exists and has required columns"""
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(
-            f"Error: Cannot find '{filepath}'. Please ensure the file is in the same directory as this program.")
-
-    try:
-        # Try to read first few rows to validate structure
-        df = pd.read_excel(filepath, nrows=1, header=5, engine='openpyxl')
-        required_columns = ['Order Id', 'Order Date', 'Bill No', 'Table Name', 'Total']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-
-        if missing_columns:
-            raise ValueError(f"Error: Excel file is missing required columns: {', '.join(missing_columns)}")
-
-    except Exception as e:
-        raise ValueError(
-            f"Error: Unable to read Excel file. Please ensure it's not corrupted and has the correct format. Details: {str(e)}")
-
-
-def sanitize_dataframe(df):
-    """Sanitize the input dataframe by removing non-order rows"""
-    print("Sanitizing input data...")
-
-    # Keep track of original row count
-    original_count = len(df)
-
-    # Create a proper copy of the dataframe
-    df = df.copy()
-
-    # Convert Total to numeric using loc
-    df.loc[:, 'Total'] = pd.to_numeric(df['Total'], errors='coerce')
-
-    # Apply all filters at once
-    mask = (
-            df['Order Id'].notna() &
-            (df['Order Id'] != '') &
-            df['Total'].notna() &
-            (df['Total'] != 0) &
-            df['Bill No'].notna() &
-            (df['Bill No'].astype(str).str.strip() != '') &
-            df['Table Name'].notna() &
-            (df['Table Name'].astype(str).str.strip() != '')
-    )
-
-    # Convert dates and add to mask
-    df.loc[:, 'Order Date'] = pd.to_datetime(df['Order Date'], errors='coerce', dayfirst=True)
-    mask = mask & df['Order Date'].notna()
-
-    # Apply the mask
-    df = df[mask].reset_index(drop=True)
-
-    rows_removed = original_count - len(df)
-    print(f"Removed {rows_removed} invalid/summary rows")
-    print(f"Remaining valid order rows: {len(df)}")
-
-    return df
 
 
 def map_customer(table_name):
@@ -148,31 +96,40 @@ def map_customer(table_name):
     return customer_mapping['Walk-ins']
 
 
-def process_sales_data(input_file):
-    """Main function to process sales data"""
+def process_sales_data(df):
+    """Process the sales data DataFrame"""
     try:
-        print(f"Starting process at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Selected file: {input_file}")
+        logging.info("Starting data processing")
 
-        if not input_file:
-            print("No file selected. Exiting...")
-            return
+        # Filter out summary rows
+        df = df[df['Order Id'].notna() & (df['Order Id'] != '')]
 
-        print("Validating input file...")
-        validate_excel_file(input_file)
+        # Create a proper copy
+        df = df.copy()
 
-        print("Reading Excel file...")
-        df = pd.read_excel(input_file, header=5, engine='openpyxl')
+        # Convert Total to numeric using loc
+        df.loc[:, 'Total'] = pd.to_numeric(df['Total'], errors='coerce')
 
-        # Sanitize input data
-        df = sanitize_dataframe(df)
+        # Apply all filters at once
+        mask = (
+                df['Order Id'].notna() &
+                (df['Order Id'] != '') &
+                df['Total'].notna() &
+                (df['Total'] != 0) &
+                df['Bill No'].notna() &
+                (df['Bill No'].astype(str).str.strip() != '') &
+                df['Table Name'].notna() &
+                (df['Table Name'].astype(str).str.strip() != '')
+        )
 
-        if len(df) == 0:
-            raise ValueError("Error: No valid order data found in the Excel file after filtering")
+        # Convert dates and add to mask
+        df.loc[:, 'Order Date'] = pd.to_datetime(df['Order Date'], errors='coerce', dayfirst=True)
+        mask = mask & df['Order Date'].notna()
 
-        print(f"Processing {len(df)} records...")
+        # Apply the mask
+        df = df[mask].reset_index(drop=True)
 
-        # Create output dataframe with all columns
+        # Create output dataframe
         output_df = pd.DataFrame(columns=[
             'IssueDate', 'DueDate', 'DueDateDays', 'DueDateDate', 'Reference', 'QuoteNumber',
             'OrderNumber', 'Customer', 'SalesQuote', 'SalesOrder', 'BillingAddress', 'ExchangeRate',
@@ -191,13 +148,12 @@ def process_sales_data(input_file):
             'HasSalesInvoiceFooters', 'HasRelay', 'Relay'
         ])
 
-        # Map values with error handling
-        print("Mapping values...")
+        # Map values
         output_df['IssueDate'] = pd.to_datetime(df['Order Date'], dayfirst=True).dt.strftime('%Y-%m-%d')
         output_df['Reference'] = df['Bill No'].astype(str)
         output_df['Customer'] = df['Table Name'].apply(map_customer)
         output_df['Lines.1.Account'] = ACCOUNT_NAME
-        output_df['Lines.1.SalesUnitPrice'] = pd.to_numeric(df['Total'], errors='coerce')
+        output_df['Lines.1.SalesUnitPrice'] = df['Total']
 
         # Set default values
         output_df['Description'] = "Daily Sales"
@@ -233,32 +189,60 @@ def process_sales_data(input_file):
         # Fill remaining columns with empty values
         output_df = output_df.fillna('')
 
-        # Generate output in same directory as input file
-        output_dir = os.path.dirname(input_file)
-        output_filename = f'output_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-        output_path = os.path.join(output_dir, output_filename)
-
-        print(f"Saving output to {output_path}...")
-        output_df.to_csv(output_path, index=False)
-
-        print(f"\nProcess completed successfully!")
-        print(f"Total records processed: {len(df)}")
-        print(f"Output file created: {output_filename}")
+        return output_df
 
     except Exception as e:
-        print(f"\nError: An unexpected error occurred: {str(e)}")
-        print("The program will now exit.")
-        return
+        logging.error(f"Error processing data: {str(e)}\n{traceback.format_exc()}")
+        raise
 
 
-if __name__ == "__main__":
-    print("Sales Order Processing Tool")
-    print("==========================")
+@app.route('/')
+def home():
+    return render_template('index.html')
 
+
+@app.route('/process', methods=['POST'])
+def process_file():
     try:
-        input_file = select_input_file()
-        process_sales_data(input_file)
-    except Exception as e:
-        print(f"Error: {str(e)}")
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
 
-    input("\nPress Enter to exit...")
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not file.filename.endswith('.xlsx'):
+            return jsonify({'error': 'Invalid file type. Please upload an Excel file.'}), 400
+
+        # Read file content
+        file_content = file.read()
+
+        # Process file
+        df = pd.read_excel(io.BytesIO(file_content), header=5, engine='openpyxl')
+
+        # Process the dataframe (your existing logic)
+        output_df = process_sales_data(df)
+
+        # Convert to CSV in memory
+        csv_data = output_df.to_csv(index=False).encode('utf-8')
+
+        # Create BytesIO object
+        mem = io.BytesIO()
+        mem.write(csv_data)
+        mem.seek(0)
+
+        # Return the CSV file from memory
+        return send_file(
+            mem,
+            as_attachment=True,
+            download_name=f'output_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+            mimetype='text/csv'
+        )
+
+    except Exception as e:
+        logging.error(f"Error in process_file: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5050, debug=True)

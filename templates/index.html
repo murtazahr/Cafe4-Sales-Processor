@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mt-5">
+    <h1 class="text-center mb-4">Cafe4 Invoice Processor</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form id="uploadForm" class="text-center">
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">Select Excel File</label>
+                    <input type="file" class="form-control" id="fileInput" accept=".xlsx" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Process File</button>
+            </form>
+
+            <div id="progressArea" class="mt-4 d-none">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                <p id="statusText" class="text-center mt-2"></p>
+            </div>
+
+            <div id="errorArea" class="mt-4 d-none">
+                <div class="alert alert-danger" role="alert">
+                    <span id="errorText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('fileInput');
+        const progressArea = document.getElementById('progressArea');
+        const progressBar = document.querySelector('.progress-bar');
+        const statusText = document.getElementById('statusText');
+        const errorArea = document.getElementById('errorArea');
+        const errorText = document.getElementById('errorText');
+
+        if (!fileInput.files[0]) {
+            showError('Please select a file.');
+            return;
+        }
+
+        // Show progress area
+        progressArea.classList.remove('d-none');
+        errorArea.classList.add('d-none');
+        progressBar.style.width = '0%';
+        statusText.textContent = 'Uploading file...';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        fetch('/process', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Processing failed');
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileInput.files[0].name.replace('.xlsx', '_processed.csv');
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                // Show success
+                progressBar.style.width = '100%';
+                statusText.textContent = 'Processing complete! Downloading file...';
+
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    progressArea.classList.add('d-none');
+                    fileInput.value = '';
+                }, 2000);
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+    });
+
+    function showError(message) {
+        const progressArea = document.getElementById('progressArea');
+        const errorArea = document.getElementById('errorArea');
+        const errorText = document.getElementById('errorText');
+
+        progressArea.classList.add('d-none');
+        errorArea.classList.remove('d-none');
+        errorText.textContent = message;
+    }
+</script>
+{% endblock %}
