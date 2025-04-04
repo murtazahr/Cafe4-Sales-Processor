@@ -24,24 +24,24 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-ACCOUNT_NAME = '70d82aaf-788e-4c20-8b41-708e719b2daf'
+ACCOUNT_NAME = 'b8437235-5411-4cc9-ad8c-427baeea081f'
 
 # Your existing customer mapping and functions here
 customer_mapping = {
-    'Walk-ins': '4947c933-8e0e-4158-8cf0-336ccfa1a540',
-    'Matsya Guest - Room 1': '1fee8999-29b4-4784-a35e-5215d2cecc94',
-    'Matsya Guest - Room 2': '22e813da-66d4-4343-9229-40172b981bb8',
-    'Matsya Guest - Room 3': '3c2efa29-cf72-4944-aa67-1a170c135c00',
-    'Matsya Guest - Room 4': '4f2bf9a5-1665-4f9f-b66a-6b62bd3af1b7',
-    'Matsya Guest - Room 5': '21548363-be12-4ab1-a52f-44855bc393fe',
-    'Matsya Guest - Room 6': 'c4912c67-75b2-4b17-8cd9-0316a4fa3403',
-    'Matsya Guest - Room 7': '1969193b-dc3d-4b61-affb-b634b31cc6a9',
-    'Matsya Guest - Room 8': '1969193b-dc3d-4b61-affb-b634b31cc6a9',
-    'Matsya Guest - Room 9': '199b6759-5d86-4a8e-b0e2-30a696b8fc89',
-    'Captain Hooks': 'd328811f-3438-4525-8927-152cde42c92e',
-    'Havelock Experience': 'b1c69dd2-d4e7-48b3-aa69-cf98fb882e1e',
-    'Island Quest': '969788ce-f0f7-4928-a92e-d1cb3cefe140',
-    'Abdul Haseeb': 'fc23947d-05d6-418e-ba5c-06cf1ed785c8'
+    'Walk-ins': '2f2f06f6-f59a-40b5-ae57-f67f4ebf19fb',
+    'Matsya Guest - Room 1': '8cfb50cb-382f-4672-b117-71ee5d186c44',
+    'Matsya Guest - Room 2': '900b174b-7b33-4cae-b944-065c88785da5',
+    'Matsya Guest - Room 3': 'e89b8ce7-f0b7-4dce-97e4-880214f395d3',
+    'Matsya Guest - Room 4': '3e51c457-324a-482c-b2bd-86c08ebcd067',
+    'Matsya Guest - Room 5': 'a1128788-76e3-43d7-9ff7-664771fdb296',
+    'Matsya Guest - Room 6': 'a758268d-d12c-487b-aff1-20d3a2226517',
+    'Matsya Guest - Room 7': 'a75c7139-16a0-4065-85d4-67e4f142c5f6',
+    'Matsya Guest - Room 8': '89444e06-a160-42b6-9153-8de7d5648a61',
+    'Matsya Guest - Room 9': 'fb35c66d-b6b7-4513-b299-65fc580a2671',
+    'Captain Hooks': '3a627e83-2867-4f9a-80cd-44322d6152bb',
+    'Havelock Experience': 'da1a2619-0790-44ad-84b2-70e2210a3e89',
+    'Island Quest': 'daf44eff-90a6-45c3-bc9b-80114dfcce18',
+    'Abdul Haseeb': '468c229b-40f3-4efe-9bed-51d1a5f06ac9'
 }
 
 
