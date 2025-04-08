@@ -28,20 +28,22 @@ ACCOUNT_NAME = 'b8437235-5411-4cc9-ad8c-427baeea081f'
 
 # Your existing customer mapping and functions here
 customer_mapping = {
-    'Walk-ins': '2f2f06f6-f59a-40b5-ae57-f67f4ebf19fb',
-    'Matsya Guest - Room 1': '8cfb50cb-382f-4672-b117-71ee5d186c44',
-    'Matsya Guest - Room 2': '900b174b-7b33-4cae-b944-065c88785da5',
-    'Matsya Guest - Room 3': 'e89b8ce7-f0b7-4dce-97e4-880214f395d3',
-    'Matsya Guest - Room 4': '3e51c457-324a-482c-b2bd-86c08ebcd067',
-    'Matsya Guest - Room 5': 'a1128788-76e3-43d7-9ff7-664771fdb296',
-    'Matsya Guest - Room 6': 'a758268d-d12c-487b-aff1-20d3a2226517',
-    'Matsya Guest - Room 7': 'a75c7139-16a0-4065-85d4-67e4f142c5f6',
-    'Matsya Guest - Room 8': '89444e06-a160-42b6-9153-8de7d5648a61',
-    'Matsya Guest - Room 9': 'fb35c66d-b6b7-4513-b299-65fc580a2671',
-    'Captain Hooks': '3a627e83-2867-4f9a-80cd-44322d6152bb',
-    'Havelock Experience': 'da1a2619-0790-44ad-84b2-70e2210a3e89',
-    'Island Quest': 'daf44eff-90a6-45c3-bc9b-80114dfcce18',
-    'Abdul Haseeb': '468c229b-40f3-4efe-9bed-51d1a5f06ac9'
+    'Walk-ins': '8cfb50cb-382f-4672-b117-71ee5d186c44',
+    'Matsya Guest - Room 1': '900b174b-7b33-4cae-b944-065c88785da5',
+    'Matsya Guest - Room 2': 'e89b8ce7-f0b7-4dce-97e4-880214f395d3',
+    'Matsya Guest - Room 3': '3e51c457-324a-482c-b2bd-86c08ebcd067',
+    'Matsya Guest - Room 4': 'a1128788-76e3-43d7-9ff7-664771fdb296',
+    'Matsya Guest - Room 5': 'a758268d-d12c-487b-aff1-20d3a2226517',
+    'Matsya Guest - Room 6': 'a75c7139-16a0-4065-85d4-67e4f142c5f6',
+    'Matsya Guest - Room 7': '89444e06-a160-42b6-9153-8de7d5648a61',
+    'Matsya Guest - Room 8': 'fb35c66d-b6b7-4513-b299-65fc580a2671',
+    'Matsya Guest - Room 9': '468c229b-40f3-4efe-9bed-51d1a5f06ac9',
+    'Captain Hooks': 'da1a2619-0790-44ad-84b2-70e2210a3e89',
+    'Havelock Experience': 'bf6297e7-78e7-4267-8ca5-d977baf28790',
+    'Island Quest': '2f2f06f6-f59a-40b5-ae57-f67f4ebf19fb',
+    'Abdul Haseeb': '3a627e83-2867-4f9a-80cd-44322d6152bb',
+    'SK Ajarul (Plumber)': '7948495d-d0ab-4327-b3f1-efba491e08fe',
+    'Havelock Tourist Services': 'daf44eff-90a6-45c3-bc9b-80114dfcce18'
 }
 
 
